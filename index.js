@@ -6,6 +6,7 @@ const fs = require("fs");
 const express = require("express");
 const multer = require("multer");
 const csv = require("fast-csv");
+const csvtojson = require("csvtojson");
 
 const Router = express.Router;
 const upload = multer({ dest: "tmp/csv/" });
@@ -24,12 +25,13 @@ router.post("/", upload.single("file"), function(req, res) {
   const fileRows = [];
 
   // open uploaded file
-  csv
-    .fromPath(req.file.path)
+  csvtojson()
+    .fromFile(req.file.path)
     .on("data", function(data) {
-      fileRows.push(data); // push each row
+      let jsonStr = data.toString("utf8");
+      fileRows.push(JSON.parse(jsonStr)); // push each row
     })
-    .on("end", function() {
+    .on("done", function() {
       res.status(200).json(fileRows);
       fs.unlinkSync(req.file.path); // remove temp file
       //process "fileRows" and respond
